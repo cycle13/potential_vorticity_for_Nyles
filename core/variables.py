@@ -43,7 +43,7 @@ modelvar = {
     'u': ModelVariable('velocity', 'covariant velocity', 'L^2.T^-1', prognostic=True),
     'U': ModelVariable('velocity', 'contravariant velocity',  'T^-1', prognostic=False),
     'vor': ModelVariable('vorticity', 'vorticity',  'L^2.T^-1', prognostic=False),
-    'pv': ModelVariable('scalar','potential vorticity','L^2.T^-3',prognostic=False)
+    'pv': ModelVariable('scalar','potential vorticity','L^3.T^-3',prognostic=False)
 }
 
 # ----------------------------------------------------------------------

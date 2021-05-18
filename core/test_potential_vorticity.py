@@ -84,70 +84,29 @@ for k in range(nz):
                 av_gradb_k[k,j,i] = w_k[k,j,i]*(gradb_k[k,j,i]+gradb_k[k-1,j,i])/2
 
 
-#vorticity's components are defined on cells edges
-av_w_i = np.full((nz,ny,nx),0)
-av_w_j = np.full((nz,ny,nx),0)
-av_w_k = np.full((nz,ny,nx),0)
 
 
-#av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]+w_i[k-1,j,i])/4
-#av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i]+w_j[k-1,j,i-1])/4
-#av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i]+w_k[k,j,i-1]+w_k[k,j-1,i-1])/4
-
-#defining vorticity's components at cells centers by averaging them
-for k in range(nz):
-    if k == 0:
-        for j in range(ny):
-            if j == 0:
-                for i in range(nx):
-                    if i == 0:
-                        av_w_i[k,j,i] = w_i[k,j,i]
-                        av_w_j[k,j,i] = w_j[k,j,i]
-                        av_w_k[k,j,i] = w_k[k,j,i]
-                    else:
-                        av_w_i[k,j,i] = w_i[k,j,i]
-                        av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1])/2
-                        av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j,i-1])/2
-            else:
-                for i in range(nx):
-                    if i == 0:
-                        av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i])/2
-                        av_w_j[k,j,i] = w_j[k,j,i]
-                        av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i])/2
-                    else:
-                        av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i])/2
-                        av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1])/2
-                        av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i]+w_k[k,j,i-1]+w_k[k,j-1,i-1])/4
-
-    else:
-        for j in range(ny):
-            if j == 0:
-                for i in range(nx):
-                    if i == 0:
-                        av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k-1,j,i])/2
-                        av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k-1,j,i])/2
-                        av_w_k[k,j,i] = w_k[k,j,i]
-                    else:
-                        av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k-1,j,i])/2
-                        av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i]+w_j[k-1,j,i-1])/4
-                        av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j,i-1])/2
-            else:
-                for i in range(nx):
-                    if i == 0:
-                        av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]+w_i[k-1,j,i])/4
-                        av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k-1,j,i])/2
-                        av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i])/2
-                    else:
-                        av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]+w_i[k-1,j,i])/4
-                        av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i]+w_j[k-1,j,i-1])/4
-                        av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i]+w_k[k,j,i-1]+w_k[k,j-1,i-1])/4
+pv = np.full((nz,ny,nx),0)
 
 
+# loop only on points where we can compute both del b and the
+# vorticity average -> exclude first and last elements of each
+# axis
+for k in range(1,nz-1):
+    for j in range(1,ny-1):
+        for i in range(1,nx-1):
+            # computing the gradients.  buyoancy is defined at
+            # cells centers thus the gradient of b is defined
+            # at cells faces defining the gradient of the
+            # buyoancy at cells centers by averaging it
 
-print(av_gradb_i.shape)
-print(av_w_i.shape)
+            av_gradb_i = b[k,j,i+1]-b[k,j,i-1] # *0.5 added later
+            av_w_i = (w_i[k,j,i]+w_i[k-1,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]) # 0.25 added later
 
+            av_gradb_j = b[k,j+1,i]-b[k,j-1,i]
+            av_w_j = (w_j[k,j,i]+w_j[k-1,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i-1])
 
-#computing the scalar product giving the potential vorticity q
-q = av_w_i*av_gradb_i+av_w_j*av_gradb_j+av_w_k*av_gradb_k
-print(q.shape)
+            av_gradb_k = b[k+1,j,i]-b[k-1,j,i]
+            av_w_k = (w_k[k,j,i]+w_k[k,j-1,i]+w_j[k,j,i-1]+w_j[k,j-1,i-1]+4*f)
+
+            pv[k,j,i] = (av_w_i*av_gradb_i+av_w_j*av_gradb_j+av_w_k*av_gradb_k) * 0.125 # 0.5*0.25

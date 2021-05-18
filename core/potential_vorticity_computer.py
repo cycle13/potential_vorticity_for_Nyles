@@ -10,107 +10,47 @@ def compile(verbose=False):
     cc.verbose = verbose
 
     @cc.export("pv_computer",
-               "void(f8[:, :, :], f8[:, :, :], f8[:, :, :], f8[:, :, :], f8[:, :, :], f8[:, :, :], f8[:, :, :], f8[:, :, :],f8[:, :, :],f8[:, :, :],f8[:, :, :])")
-    def pv_computer(pv,b,w_i,w_j,w_k,av_gradb_i,av_gradb_j,av_gradb_k,av_w_i,av_w_j,av_w_k):
+               "void(float64, f8[:, :, :], f8[:, :, :], f8[:, :, :], f8[:, :, :], f8[:, :, :])")
+    def pv_computer(f, pv, b, w_i, w_j, w_k):
+        """ Compute the pv
+
+        pv = del b . omega
+
+        where b is the buoyancy and omega the vorticity (vector)
+
+        omega = (w_i, w_j, w_k+f)
+
+        f, the Coriolis parameter, is added to the vertical component
+
+        Parameters
+        ----------
+        f: float
+        pv, b, w_i, w_j, w_k: arrays
+        """
 
         nz,ny,nx = b.shape
-        #computing the gradients.
-        #buyoancy is defined at cells centers thus the gradient of b is defined at cells faces
-        gradb_k = b[1:nz,:,:]-b[0:nz-1,:,:]
-        gradb_j = b[:,1:ny,:]-b[:,0:ny-1,:]
-        gradb_i = b[:,:,1:nx]-b[:,:,0:nx-1]
 
-        #defining the gradient of the buyoancy at cells centers by averaging it
+        # loop only on points where we can compute both del b and the
+        # vorticity average -> exclude first and last elements of each
+        # axis
+        for k in range(1,nz-1):
+            for j in range(1,ny-1):
+                for i in range(1,nx-1):
+                    # computing the gradients.  buyoancy is defined at
+                    # cells centers thus the gradient of b is defined
+                    # at cells faces defining the gradient of the
+                    # buyoancy at cells centers by averaging it
 
+                    av_gradb_i = b[k,j,i+1]-b[k,j,i-1] # *0.5 added later
+                    av_w_i = (w_i[k,j,i]+w_i[k-1,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]) # 0.25 added later
 
-        for k in range(nz):
-            for j in range(ny):
-                for i in range(nx):
-                    if i == 0:
-                        av_gradb_i[k,j,i] = gradb_i[k,j,i]
-                    elif i == nx-1:
-                        av_gradb_i[k,j,i] = gradb_i[k,j,i-1]
-                    else:
-                        av_gradb_i[k,j,i] = (gradb_i[k,j,i]+gradb_i[k,j,i-1])/2
+                    av_gradb_j = b[k,j+1,i]-b[k,j-1,i]
+                    av_w_j = (w_j[k,j,i]+w_j[k-1,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i-1])
 
-        for k in range(nz):
-            for j in range(ny):
-                for i in range(nx):
-                    if j == 0:
-                        av_gradb_j[k,j,i] = gradb_j[k,j,i]
-                    elif j == ny-1:
-                        av_gradb_j[k,j,i] = gradb_j[k,j-1,i]
-                    else:
-                        av_gradb_j[k,j,i] = (gradb_j[k,j,i]+gradb_j[k,j-1,i])/2
+                    av_gradb_k = b[k+1,j,i]-b[k-1,j,i]
+                    av_w_k = (w_k[k,j,i]+w_k[k,j-1,i]+w_j[k,j,i-1]+w_j[k,j-1,i-1]+4*f)
 
-        for k in range(nz):
-            for j in range(ny):
-                for i in range(nx):
-                    if k == 0:
-                        av_gradb_k[k,j,i] = gradb_k[k,j,i]
-                    elif k == nz-1:
-                        av_gradb_k[k,j,i] = gradb_k[k-1,j,i]
-                    else:
-                        av_gradb_k[k,j,i] = (gradb_k[k,j,i]+gradb_k[k-1,j,i])/2
-
-
-        #vorticity's components are defined on cells edges
-
-        #av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]+w_i[k-1,j,i])/4
-        #av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i]+w_j[k-1,j,i-1])/4
-        #av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i]+w_k[k,j,i-1]+w_k[k,j-1,i-1])/4
-
-        #defining vorticity's components at cells centers by averaging them
-        for k in range(nz):
-            if k == 0:
-                for j in range(ny):
-                    if j == 0:
-                        for i in range(nx):
-                            if i == 0:
-                                av_w_i[k,j,i] = w_i[k,j,i]
-                                av_w_j[k,j,i] = w_j[k,j,i]
-                                av_w_k[k,j,i] = w_k[k,j,i]
-                            else:
-                                av_w_i[k,j,i] = w_i[k,j,i]
-                                av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1])/2
-                                av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j,i-1])/2
-                    else:
-                        for i in range(nx):
-                            if i == 0:
-                                av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i])/2
-                                av_w_j[k,j,i] = w_j[k,j,i]
-                                av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i])/2
-                            else:
-                                av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i])/2
-                                av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1])/2
-                                av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i]+w_k[k,j,i-1]+w_k[k,j-1,i-1])/4
-
-            else:
-                for j in range(ny):
-                    if j == 0:
-                        for i in range(nx):
-                            if i == 0:
-                                av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k-1,j,i])/2
-                                av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k-1,j,i])/2
-                                av_w_k[k,j,i] = w_k[k,j,i]
-                            else:
-                                av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k-1,j,i])/2
-                                av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i]+w_j[k-1,j,i-1])/4
-                                av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j,i-1])/2
-                    else:
-                        for i in range(nx):
-                            if i == 0:
-                                av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]+w_i[k-1,j,i])/4
-                                av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k-1,j,i])/2
-                                av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i])/2
-                            else:
-                                av_w_i[k,j,i] = (w_i[k,j,i]+w_i[k,j-1,i]+w_i[k-1,j-1,i]+w_i[k-1,j,i])/4
-                                av_w_j[k,j,i] = (w_j[k,j,i]+w_j[k,j,i-1]+w_j[k-1,j,i]+w_j[k-1,j,i-1])/4
-                                av_w_k[k,j,i] = (w_k[k,j,i]+w_k[k,j-1,i]+w_k[k,j,i-1]+w_k[k,j-1,i-1])/4
-
-
-        #computing the scalar product giving the potential vorticity pv
-        pv[:,:,:] = av_w_i*av_gradb_i+av_w_j*av_gradb_j+av_w_k*av_gradb_k
+                    pv[k,j,i] = (av_w_i*av_gradb_i+av_w_j*av_gradb_j+av_w_k*av_gradb_k) * 0.125 # 0.5*0.25
 
     cc.compile()
 

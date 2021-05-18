@@ -8,7 +8,6 @@ from scipy.interpolate import griddata
 
 
 
-
 datadir = "/users/bertrandducrocq/data/Nyles"
 expname = "ekman_2"
 ncfile = "%s/%s/%s_00_hist.nc" % (datadir, expname, expname)
@@ -167,5 +166,3 @@ pv = pv[:]
 
 #diff = (pv[1:,:,:,:]-pv[:nt-1,:,:,:])
 #print(diff)
-
-print(pv)
