@@ -1,0 +1,335 @@
+{
+    "model": {
+        "modelname": {
+            "type": "str",
+            "default": "LES",
+            "avail": ["LES", "linear", "advection"],
+            "doc": "Type of the model: (1) LES (Large Eddy Simulation): full 3D incompressible Navier-Stokes equations (2) linear: 3D incompressible Navier-Stokes equations linearized around a stationary mean state, i.e., without the vortex-force and kinetic-energy terms, which are quadratic in velocity (3) advection: 3D advection equations applied on a passive tracer in a steady flow"
+        },
+        "geometry": {
+            "type": "str",
+            "default": "closed",
+            "avail": ["closed", "perio_x", "perio_y", "perio_xy", "perio_xyz"],
+            "doc": "Geometry of the domain"
+        },
+        "Lx": {
+            "type": "float",
+            "default": 1.0,
+            "avail": "> 0.0",
+            "doc": "Length of the domain along x (x-axis goes from 0 to Lx)"
+        },
+        "Ly": {
+            "type": "float",
+            "default": 1.0,
+            "avail": "> 0.0",
+            "doc": "Length of the domain along y (y-axis goes from 0 to Ly)"
+        },
+        "Lz": {
+            "type": "float",
+            "default": 1.0,
+            "avail": "> 0.0",
+            "doc": "Length of the domain along z (z-axis goes from 0 to Lz)"
+        },
+        "n_tracers": {
+            "type": "int",
+            "default": 0,
+            "avail": ">= 0",
+            "doc": "Number of passive tracers to be advected with the flow; tracers are automatically added to the history file"
+        }
+    },
+
+    "physics": {
+        "unit_length": {
+            "type": "str",
+            "default": "m",
+            "avail": "any",
+            "doc": "Physical unit for lengths (extents in space) used in the model"
+        },
+        "unit_duration": {
+            "type": "str",
+            "default": "s",
+            "avail": "any",
+            "doc": "Physical unit for durations (amounts of time) used in the model"
+        },
+        "rotating": {
+            "type": "bool",
+            "default": false,
+            "avail": [true, false],
+            "doc": "Whether Coriolis force is present or not"
+        },
+        "forced": {
+            "type": "bool",
+            "default": false,
+            "avail": [true, false],
+            "doc": "Whether the flow is forced or not. If True, the user must supply the forcing in the user script"
+        },
+        "coriolis": {
+            "type": "float",
+            "default": 1.0,
+            "avail": "any",
+            "doc": "Coriolis parameter in the vertical direction (in s^-1)"
+        },
+        "diff_coef": {
+            "type": "dict",
+            "default": {},
+            "avail": "any",
+            "doc": "Diffusion coefficient for each variable that has a diffusion term. Diffusion coefficients are in m^2.s^-1."
+        }
+    },
+
+    "IO": {
+        "datadir": {
+            "type": "str",
+            "default": "~/data/Nyles",
+            "avail": "any valid path (existent or not) with write access",
+            "doc": "Folder in which the output files of the simulation are stored"
+        },
+        "expname": {
+            "type": "str",
+            "default": "experiment",
+            "avail": "any valid filename",
+            "doc": "Name of the experiment; used in the name of the output directory and output files"
+        },
+        "mode": {
+            "type": "str",
+            "default": "overwrite",
+            "avail": ["overwrite", "count", "continue"],
+            "doc": "Handling of existing output files with the same name"
+        },
+        "variables_in_history": {
+            "type": "list or string",
+            "default": "prognostic",
+            "avail": "a list of model variables or one of the strings \"all\", \"prognostic\", or \"p+p\"",
+            "doc": "Model variables to save in the history file can be: (1) a list of nicknames (2) the string \"all\" to select all model variables (3) the string \"prognostic\" to select all prognostic model variables (4) the string \"p+p\" to select all prognostic model variables and pressure; note that tracers are automatically saved in the history file"
+        },
+        "timestep_history": {
+            "type": "float",
+            "default": 1.0,
+            "avail": ">= 0.0",
+            "doc": "Desired timestep for saving the model state in the history file; use 0.0 to save every iteration step of the model"
+        },
+        "simplified_grid": {
+            "type": "bool",
+            "default": false,
+            "avail": [true, false],
+            "doc": "Whether to save in the history file every variable at its actual coordinates of the staggered grid (physically and numerically correct) or to simplify and to save all variables at cell centers (slightly incorrect but sometimes more convenient); this does not influence the calcuations or the numerics, it only affects the history file"
+        },
+        "include_halo": {
+            "type": "bool",
+            "default": false,
+            "avail": [true, false],
+            "doc": "Whether to include the halo in the netCDF file"
+        },
+        "disk_space_warning": {
+            "type": "float",
+            "default": 0.5,
+            "avail": ">= 0.0",
+            "doc": "Minimal amount of free disk space in GB; if the available space in the output directory (datadir) drops below this value, the simulation is paused and the user is asked whether they want to continue or stop the experiment; if the user clears disk space before resuming the program, the checks stay on, otherwise they are turned off; set this parameter to zero to disable checks"
+        }
+    },
+
+    "animation": {
+        "show": {
+            "type": "bool",
+            "default": false,
+            "avail": [true, false],
+            "doc": "Whether to display an animated 3D figure of the simulation or not (faster)"
+        },
+        "iterations_per_frame": {
+            "type": "int",
+            "default": 4,
+            "avail": ">= 1",
+            "doc": "Number of calculation steps (n) until the animation updates; set to 1 to show the state after every iteration step (slow); note that this parameter ensures that about equal *calculation time* has passed between two updates, but not that equal *model time* has passed; use fix timesteps to ensure both"
+        },
+        "style": {
+            "type": "str",
+            "default": "b-interface",
+            "avail": ["b-interface", "tracer"],
+            "doc": "Type of the animation: (1) b-interface: plot the interface of the central value of initial buoyancy (2) tracer: plot the position of all tracers in a scatter plot; tracers should be initialized with 1; the scatter plot shows where the value is bigger than 0.5"
+        },
+        "stable_stratification": {
+            "type": "bool",
+            "default": false,
+            "avail": [true, false],
+            "doc": "When the animation style is b-interface, it is necessary to say if the initial stratification is stable or unstable"
+        },
+        "aspect": {
+            "type": "str",
+            "default": "equal",
+            "avail": ["equal", "auto"],
+            "doc": "Aspect ratio of the figure"
+        },
+        "rotation_speed": {
+            "type": "int",
+            "default": 3,
+            "avail": ">= 0",
+            "doc": "Speed of the camera to rotate around the 3D scene in degrees per redraw"
+        }
+    },
+
+    "time": {
+        "tend": {
+            "type": "float",
+            "default": 10.0,
+            "avail": "> 0.0",
+            "doc": "Length of the simulation"
+        },
+        "timestepping": {
+            "type": "str",
+            "default": "LFAM3",
+            "avail": ["RK3_SSP", "LFAM3", "EF"],
+            "doc": "Time scheme used to integrate the model in time; EF: Euler forward; LFAM3: a predictor-corrector method; RK3_SSP: stable strongly preserving RK3"
+        },
+        "auto_dt": {
+            "type": "bool",
+            "default": true,
+            "avail": [true, false],
+            "doc": "Choice between automatic (True) or fixed (False) timestep dt"
+        },
+        "dt": {
+            "type": "float",
+            "default": 0.1,
+            "avail": "> 0.0",
+            "doc": "In the case of a fixed timestep, this is the timestep"
+        },
+        "cfl": {
+            "type": "float",
+            "default": 1.0,
+            "avail": "> 0.0",
+            "doc": "In the case of an automatic timestep, this is the coefficient that sets the timestep; it is usually on the order of 1.0; reduce it to have a more stable integration in time, increase it to have a faster but coarser integration in time"
+        },
+        "dt_max": {
+            "type": "float",
+            "default": 1.0,
+            "avail": "> 0.0",
+            "doc": "In the case of an automatic timestep, this is the maximal timestep (and the inital timestep if the initial velocity is zero); this parameter is important in situations where the dominant velocity is not the local velocity of the fluid parcels, e.g., in experiments with waves"
+        }
+    },
+
+    "discretization": {
+        "global_nx": {
+            "type": "int",
+            "default": 64,
+            "avail": "[3 *] 2^n",
+            "doc": "Number of gridpoints for the full domain in x-direction; must be a power of 2 or 3 times a power of 2"
+        },
+        "global_ny": {
+            "type": "int",
+            "default": 64,
+            "avail": "[3 *] 2^n",
+            "doc": "Number of gridpoints for the full domain in y-direction; must be a power of 2 or 3 times a power of 2"
+        },
+        "global_nz": {
+            "type": "int",
+            "default": 64,
+            "avail": "[3 *] 2^n",
+            "doc": "Number of gridpoints for the full domain in z-direction; must be a power of 2 or 3 times a power of 2"
+        },
+        "orderVF": {
+            "type": "int",
+            "default": 5,
+            "avail": [1, 2, 3, 4, 5],
+            "doc": "Order of the interpolation of the vortex-force term"
+        },
+        "orderKE": {
+            "type": "int",
+            "default": 5,
+            "avail": [1, 2, 3, 4, 5],
+            "doc": "Order of the interpolation of the kinetic energy term"
+        },
+        "orderA": {
+            "type": "int",
+            "default": 5,
+            "avail": [1, 2, 3, 4, 5],
+            "doc": "Order of the interpolation of the advection term"
+        }
+    },
+
+    "MPI": {
+        "npx": {
+            "type": "int",
+            "default": 1,
+            "avail": "2^n",
+            "doc": "Number of subdomains (cores) in x; must be a power of 2 and cannot be larger than global_nx"
+        },
+        "npy": {
+            "type": "int",
+            "default": 1,
+            "avail": "2^n",
+            "doc": "Number of subdomains (cores) in y; must be a power of 2 and cannot be larger than global_ny"
+        },
+        "npz": {
+            "type": "int",
+            "default": 1,
+            "avail": "2^n",
+            "doc": "Number of subdomains (cores) in z; must be a power of 2 and cannot be larger than global_nz"
+        },
+        "nh": {
+            "type": "int",
+            "default": 3,
+            "avail": ">= 0",
+            "doc": "Number of ghost points in the halo"
+        }
+    },
+
+    "multigrid": {
+        "npre": {
+            "type": "int",
+            "default": 3,
+            "avail": ">= 0",
+            "doc": "Number of smoother iterations before coarsening"
+        },
+        "npost": {
+            "type": "int",
+            "default": 3,
+            "avail": ">= 0",
+            "doc": "Number of smoother iterations after interpolation"
+        },
+        "ndeepest": {
+            "type": "int",
+            "default": 20,
+            "avail": ">= 0",
+            "doc": "Number of smoother iterations at the coarsest level"
+        },
+        "omega": {
+            "type": "float",
+            "default": 0.8,
+            "avail": ">= 0.0",
+            "doc": "Relaxation coefficient in the Jacobi smoother"
+        },
+        "tol": {
+            "type": "float",
+            "default": 1e-3,
+            "avail": ">= 0.0",
+            "doc": "Accuracy of the solution, such that ||r||/||b|| <= tol, r is the residual and b the rhs"
+        },
+        "maxite": {
+            "type": "int",
+            "default": 20,
+            "avail": ">= 0",
+            "doc": "Maximum number of iterations per multigrid solve"
+        },
+        "nglue": {
+            "type": "int",
+            "default": 4,
+            "avail": ">= 0",
+            "doc": "Subdomain width (in any direction) below which subdomains are glued together"
+        },
+        "ncellscoarsest": {
+            "type": "int",
+            "default": 32,
+            "avail": ">= 0",
+            "doc": "Minimal size of a subdomain (in terms of nx*ny*nz). This defines the coarsest level. "
+        }
+    },
+
+    "user": {
+        "param1": {
+            "type": "float",
+            "default": 0.0,
+            "avail": "any",
+            "doc": "User parameter. Can be anything. In Rayleigh Benard experiment, this is either the imposed flux or the imposed buoyancy gradient"
+        }
+    }
+
+}
