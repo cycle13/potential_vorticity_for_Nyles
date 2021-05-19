@@ -15,6 +15,7 @@ import pickle
 import cov_to_contra
 import halo
 import potential_vorticity
+import parameters
 
 
 import numpy as np
@@ -32,6 +33,7 @@ It follows the procedure from the Ferziger p.180
 class LES(object):
 
     def __init__(self, param, grid, linear=False):
+        self.param = param
         self.nonlinear = not linear
         self.grid = grid
         self.traclist = ['b']
@@ -97,7 +99,7 @@ class LES(object):
             self.halo.fill(state.vor)
             self.halo.fill(state.ke)
 
-        potential_vorticity.pv_computer(state,self.fparameter)
+        potential_vorticity.pv_computer(state,self.fparameter,self.param["rotating"],self.param["coriolis"])
 
 
 

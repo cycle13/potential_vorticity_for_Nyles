@@ -1,10 +1,7 @@
 import compiled_pv as cpv
 import numpy as np
-import parameters as p
 
-def pv_computer(state, f):
-
-    param = p.UserParameters()
+def pv_computer(state, f, rotating, coriolis):
 
     b = state.b.view('i')
     pv = state.pv.view('i')
@@ -13,9 +10,8 @@ def pv_computer(state, f):
     w_k = state.vor["k"].view('i')
 
     #adding the coriolis force
-    rotating = param.physics["rotating"]
     if rotating == True:
-        f = param.physics["coriolis"]
+        f = coriolis
     else:
         f = 0.
 
