@@ -23,7 +23,7 @@ pv = pv[:]
 nt,nz,ny,nx = pv.shape
 print(pv.shape)
 
-"""
+
 t=0
 z=int(nz/2)
 
@@ -53,4 +53,3 @@ def animate(i):
 anim=animation.FuncAnimation(fig,animate,frames=nt,interval=100,repeat=False,blit=False)
 
 plt.show()
-"""

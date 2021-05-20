@@ -1,3 +1,5 @@
+import potential_vorticity
+
 """Provide Input/Output handling for Nyles through the class NylesIO.
 
 The NylesIO class serves for two closely related purposes:
@@ -281,6 +283,7 @@ class NylesIO(object):
             # Nothing to do yet
             return False
         # Otherwise it is time to write data to the history file
+        potential_vorticity.pv_computer(state,self.param)
         self.write_history_file(state, t, n)
         self.t_next_hist += self.dt_hist
         if self.disk_limit <= 0:
