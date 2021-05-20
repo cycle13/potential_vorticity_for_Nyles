@@ -40,12 +40,12 @@ param.IO["expname"] = "ekman_2"
 param.IO["mode"] = "overwrite"
 param.IO["variables_in_history"] = ['b', 'u', 'vor', 'pv']
 
-param.IO["timestep_history"] = 0.5  # 0.0 saves every frame
+param.IO["timestep_history"] = 0.2  # 0.0 saves every frame
 param.IO["disk_space_warning"] = 0.5  # in GB
 param.IO["simplified_grid"] = True
 
 param.time["timestepping"] = "LFAM3"
-param.time["tend"] = 10.
+param.time["tend"] = 30.
 param.time["auto_dt"] = True
 # parameter if auto_dt is False
 param.time["dt"] = 0.02
@@ -70,7 +70,7 @@ param.multigrid["tol"] = 1e-4
 
 param.physics["forced"] = True
 param.physics["rotating"] = True
-param.physics["coriolis"] = .25
+param.physics["coriolis"] = 1
 
 
 class Forcing(object):

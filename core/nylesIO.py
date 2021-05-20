@@ -139,6 +139,7 @@ class NylesIO(object):
         self.unitT = param["unit_duration"]
         self.unitL = param["unit_length"]
         self.n_tracers = param["n_tracers"]
+        self.param = param
 
         # Create a copy of the experiment parameters to save them it in the history file
         self.experiment_parameters = param.copy()

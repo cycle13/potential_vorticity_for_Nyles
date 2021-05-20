@@ -82,6 +82,7 @@ class LES(object):
         projection.compute_p(self.mg, state, self.grid, self.neighbours)
         self.halo.fill(state.u)
         cov_to_contra.U_from_u(state, self.grid)
+        potential_vorticity.pv_computer(state,self.param)
 
 
         # this computation is only to check the divergence
@@ -99,7 +100,6 @@ class LES(object):
             self.halo.fill(state.vor)
             self.halo.fill(state.ke)
 
-        potential_vorticity.pv_computer(state,self.fparameter,self.param["rotating"],self.param["coriolis"])
 
 
 

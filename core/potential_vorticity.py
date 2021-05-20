@@ -1,7 +1,10 @@
 import compiled_pv as cpv
 import numpy as np
 
-def pv_computer(state, f, rotating, coriolis):
+def pv_computer(state, param):
+
+    rotating = param["rotating"]
+    coriolis = param["coriolis"]
 
     b = state.b.view('i')
     pv = state.pv.view('i')

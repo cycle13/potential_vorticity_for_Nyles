@@ -51,7 +51,6 @@ def compile(verbose=False):
                     av_w_k = (w_k[k,j,i]+w_k[k,j-1,i]+w_j[k,j,i-1]+w_j[k,j-1,i-1]+4*f)
 
                     pv[k,j,i] = (av_w_i*av_gradb_i+av_w_j*av_gradb_j+av_w_k*av_gradb_k) * 0.125 # 0.5*0.25
-
     cc.compile()
 
 compile()
